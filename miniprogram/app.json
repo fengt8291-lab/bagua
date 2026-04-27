@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/bagua/index",
+    "pages/index/index",
+    "pages/example/index"
+  ],
+  "window": {
+    "backgroundColor": "#F5F0E8",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F5F0E8",
+    "navigationBarTitleText": "六爻起卦",
+    "navigationBarTextStyle": "black"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

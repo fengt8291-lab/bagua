@@ -1,0 +1,90 @@
+<!-- 起卦工具页面 -->
+<view class="container">
+
+<!-- 状态1：介绍页 -->
+<view wx:if="{{status == 'intro'}}" class="intro-page">
+  <view class="intro-icon">☰</view>
+  <view class="intro-title">六爻起卦</view>
+  <view class="intro-subtitle">以AI之眼，窥事物之变</view>
+  <view class="intro-desc">掷18次硬币\nAI为你解读卦象含义</view>
+  <button class="start-btn" bindtap="startDivination">开始起卦</button>
+  <view class="intro-note">完全免费 · 隐私保护</view>
+</view>
+
+<!-- 状态2：输入问题 -->
+<view wx:if="{{status == 'inputing'}}" class="input-page">
+  <view class="page-title">请描述你的问题</view>
+  <view class="input-tip">越具体，解读越准确</view>
+  <textarea
+    class="question-input"
+    placeholder="例如：我和他下周的面试结果会如何？"
+    maxlength="100"
+    bindinput="onQuestionInput"
+    value="{{question}}"
+  ></textarea>
+  <view class="char-count">{{question.length}}/100</view>
+  <button class="confirm-btn" bindtap="confirmQuestion">确认，开始掷卦</button>
+  <view class="back-btn" bindtap="reset">上一步</view>
+</view>
+
+<!-- 状态3：掷卦动画中 -->
+<view wx:if="{{status == 'tossing'}}" class="tossing-page">
+  <view class="toss-title">请在心中默念您的问题</view>
+  <view class="toss-progress">{{tossIndex}}/18</view>
+  <view class="toss-visual">
+    <view class="coin-row">
+      <view class="coin {{currentGroup[0] ? (currentGroup[0].isYang ? 'yang' : 'yin') : 'empty'}}">
+        <text wx:if="{{currentGroup[0]}}">{{currentGroup[0].isYang ? '阳' : '阴'}}</text>
+        <text wx:if="{{!currentGroup[0] && tossAnimating}}">...</text>
+        <text wx:if="{{!currentGroup[0] && !tossAnimating}}">?</text>
+      </view>
+      <view class="coin {{currentGroup[1] ? (currentGroup[1].isYang ? 'yang' : 'yin') : 'empty'}}">
+        <text wx:if="{{currentGroup[1]}}">{{currentGroup[1].isYang ? '阳' : '阴'}}</text>
+        <text wx:if="{{!currentGroup[1] && tossAnimating}}">...</text>
+        <text wx:if="{{!currentGroup[1] && !tossAnimating}}">?</text>
+      </view>
+      <view class="coin {{currentGroup[2] ? (currentGroup[2].isYang ? 'yang' : 'yin') : 'empty'}}">
+        <text wx:if="{{currentGroup[2]}}">{{currentGroup[2].isYang ? '阳' : '阴'}}</text>
+        <text wx:if="{{!currentGroup[2] && tossAnimating}}">...</text>
+        <text wx:if="{{!currentGroup[2] && !tossAnimating}}">?</text>
+      </view>
+    </view>
+  </view>
+  <view class="toss-hint">第 {{currentLineIndex}} 爻（共6爻）</view>
+  <view class="loading-dots" wx:if="{{tossAnimating}}">
+    <view class="dot"></view>
+    <view class="dot"></view>
+    <view class="dot"></view>
+  </view>
+</view>
+
+<!-- 状态4：结果页 -->
+<view wx:if="{{status == 'result'}}" class="result-page">
+  <view class="result-header">
+    <view class="hexagram-name">{{mainHex}}</view>
+    <view wx:if="{{changedHex}}" class="hexagram-arrow">→</view>
+    <view wx:if="{{changedHex}}" class="hexagram-name changed">{{changedHex}}</view>
+  </view>
+
+  <view class="lines-display">
+    <view class="line-item" wx:for="{{lines}}" wx:key="index">
+      <text class="line-name">{{item.name}}</text>
+      <text class="line-symbol {{item.isYang ? 'yang' : 'yin'}} {{item.isOld ? 'old' : ''}}">{{item.symbol}}</text>
+      <text class="line-text">{{item.text}}</text>
+    </view>
+  </view>
+
+  <view class="result-card">
+    <view class="result-label">✨ AI解读</view>
+    <view class="result-interpretation">{{aiInterpretation}}</view>
+  </view>
+
+  <view class="banner-ad-container" wx:if="{{bannerAdLoaded}}">
+    <ad unit-id="adunit-xxxxxx" type="banner"></ad>
+  </view>
+
+  <button class="share-btn" open-type="share">分享给朋友</button>
+  <view class="replay-btn" bindtap="reset">再起一卦</view>
+</view>
+
+</view>
