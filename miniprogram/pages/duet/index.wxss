@@ -1,0 +1,76 @@
+/* Duet 小程序样式 */
+
+.container { min-height: 100vh; background: #f5f0e8; color: #2d2d2d; font-family: -apple-system, sans-serif; }
+
+/* 配对页 */
+.pair-page { padding: 60rpx 50rpx; }
+.pair-header { text-align: center; margin-bottom: 80rpx; }
+.pair-icon { font-size: 80rpx; margin-bottom: 20rpx; }
+.pair-title { font-size: 48rpx; font-weight: 700; color: #2d2d2d; margin-bottom: 12rpx; }
+.pair-subtitle { font-size: 26rpx; color: #999; }
+
+.generate-btn { background: #c9a96e; color: #fff; font-size: 32rpx; padding: 28rpx 0; border-radius: 60rpx; border: none; width: 100%; }
+.generate-btn::after { border: none; }
+
+.my-code-section { text-align: center; margin-bottom: 50rpx; }
+.code-label { font-size: 24rpx; color: #999; margin-bottom: 12rpx; }
+.my-code { font-size: 72rpx; font-weight: 700; color: #c9a96e; letter-spacing: 8rpx; margin-bottom: 16rpx; }
+.code-hint { font-size: 24rpx; color: #aaa; margin-bottom: 30rpx; }
+.share-code-btn { background: #07c160; color: #fff; font-size: 28rpx; padding: 20rpx 0; border-radius: 40rpx; border: none; width: 80%; }
+.share-code-btn::after { border: none; }
+
+.input-section { margin-top: 40rpx; }
+.input-label { font-size: 26rpx; color: #999; text-align: center; margin-bottom: 20rpx; }
+.code-input { background: #fff; border: 2rpx solid #e8e0d5; border-radius: 16rpx; padding: 24rpx; font-size: 40rpx; text-align: center; letter-spacing: 4rpx; margin-bottom: 24rpx; }
+.start-btn { background: #c9a96e; color: #fff; font-size: 32rpx; padding: 28rpx 0; border-radius: 60rpx; border: none; }
+.start-btn::after { border: none; }
+
+/* 答题页 */
+.answer-page { padding: 40rpx 50rpx; }
+.progress-bar { height: 8rpx; background: #e8e0d5; border-radius: 4rpx; margin-bottom: 12rpx; }
+.progress-fill { height: 100%; background: #c9a96e; border-radius: 4rpx; transition: width 0.3s; }
+.progress-text { font-size: 24rpx; color: #999; text-align: center; margin-bottom: 40rpx; }
+
+.question-card { background: #fff; border-radius: 24rpx; padding: 50rpx 40rpx; margin-bottom: 30rpx; }
+.question-text { font-size: 34rpx; color: #2d2d2d; line-height: 1.6; margin-bottom: 40rpx; font-weight: 500; }
+.options { display: flex; flex-direction: column; gap: 20rpx; }
+.option-btn { background: #f5f0e8; border: 2rpx solid #e8e0d5; border-radius: 16rpx; padding: 28rpx; font-size: 30rpx; color: #666; text-align: left; }
+.option-btn.selected { background: #fff8e6; border-color: #c9a96e; color: #c9a96e; }
+.waiting-hint { font-size: 24rpx; color: #bbb; text-align: center; }
+
+/* 等待页 */
+.waiting-page { display: flex; flex-direction: column; align-items: center; padding: 120rpx 50rpx; }
+.waiting-icon { font-size: 80rpx; margin-bottom: 30rpx; }
+.waiting-title { font-size: 36rpx; font-weight: 600; color: #2d2d2d; margin-bottom: 16rpx; }
+.waiting-sub { font-size: 26rpx; color: #999; text-align: center; margin-bottom: 60rpx; }
+.dot-anim { display: flex; gap: 12rpx; }
+.dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #c9a96e; animation: dotPulse 1.2s infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+.cancel-btn { font-size: 28rpx; color: #999; margin-top: 60rpx; }
+
+/* 结果页 */
+.result-page { padding: 50rpx 50rpx 100rpx; }
+.result-header { text-align: center; margin-bottom: 50rpx; }
+.result-type { font-size: 72rpx; font-weight: 700; color: #c9a96e; margin-bottom: 12rpx; }
+.result-title { font-size: 32rpx; color: #666; }
+
+.dimensions-card { background: #fff; border-radius: 24rpx; padding: 40rpx; margin-bottom: 30rpx; }
+.dim-title { font-size: 28rpx; font-weight: 600; color: #2d2d2d; margin-bottom: 30rpx; }
+.dim-item { display: flex; align-items: center; margin-bottom: 20rpx; }
+.dim-name { width: 120rpx; font-size: 26rpx; color: #666; }
+.dim-bar { flex: 1; height: 12rpx; background: #f0ebe3; border-radius: 6rpx; margin: 0 20rpx; }
+.dim-fill { height: 100%; background: #c9a96e; border-radius: 6rpx; }
+.dim-score { width: 80rpx; font-size: 24rpx; color: #999; text-align: right; }
+
+.suggestions-card { background: #fff8e6; border-radius: 24rpx; padding: 40rpx; margin-bottom: 30rpx; }
+.sug-title { font-size: 26rpx; font-weight: 600; color: #c9a96e; margin-bottom: 20rpx; }
+.sug-item { font-size: 28rpx; color: #2d2d2d; line-height: 1.8; }
+
+.share-section { margin-bottom: 30rpx; }
+.share-btn { background: #c9a96e; color: #fff; font-size: 32rpx; padding: 28rpx 0; border-radius: 60rpx; border: none; margin-bottom: 16rpx; }
+.share-btn::after { border: none; }
+.share-text-preview { font-size: 24rpx; color: #aaa; text-align: center; }
+.banner-ad { width: 100%; display: flex; justify-content: center; margin-bottom: 30rpx; }
+.replay-btn { text-align: center; font-size: 28rpx; color: #999; padding: 20rpx; }

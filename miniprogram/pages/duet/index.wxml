@@ -1,0 +1,117 @@
+<!-- Duet 双人测试页面 -->
+<view class="container">
+
+<!-- 状态1：配对页面 -->
+<view wx:if="{{status == 'pair'}}" class="pair-page">
+  <view class="pair-header">
+    <view class="pair-icon">💑</view>
+    <view class="pair-title">Duet 双人测试</view>
+    <view class="pair-subtitle">你们的关系，是什么化学反应</view>
+  </view>
+
+  <!-- 我的配对码 -->
+  <view wx:if="{{!myCode}}" class="generate-section">
+    <button class="generate-btn" bindtap="generateCode">生成我的配对码</button>
+  </view>
+  <view wx:else class="my-code-section">
+    <view class="code-label">我的配对码</view>
+    <view class="my-code">{{myCode}}</view>
+    <view class="code-hint">把这个码发给你的朋友</view>
+    <button class="share-code-btn" open-type="share">微信分享给朋友</button>
+  </view>
+
+  <!-- 输入对方配对码 -->
+  <view class="input-section">
+    <view class="input-label">或输入对方的配对码</view>
+    <input 
+      class="code-input" 
+      placeholder="ABC-123"
+      maxlength="7"
+      bindinput="onPartnerCodeInput"
+      value="{{partnerCode}}"
+    />
+    <button class="start-btn" bindtap="startPairing">开始配对</button>
+  </view>
+</view>
+
+<!-- 状态2：答题中 -->
+<view wx:if="{{status == 'answering'}}" class="answer-page">
+  <view class="progress-bar">
+    <view class="progress-fill" style="width: {{(currentQ / totalQ) * 100}}%"></view>
+  </view>
+  <view class="progress-text">第 {{currentQ + 1}} / {{totalQ}} 题</view>
+
+  <!-- 题目 -->
+  <view class="question-card">
+    <view class="question-text">{{questions[currentQ].text}}</view>
+    <view class="options">
+      <button 
+        wx:for="{{questions[currentQ].options}}" 
+        wx:key="index"
+        class="option-btn {{answers[currentQ] === index ? 'selected' : ''}}"
+        bindtap="selectAnswer"
+        data-index="{{index}}"
+      >{{item}}</button>
+    </view>
+  </view>
+
+  <view class="waiting-hint">⚠️ 你的朋友也需要答题才能看到结果哦</view>
+</view>
+
+<!-- 状态3：等待对方 -->
+<view wx:if="{{status == 'waiting'}}" class="waiting-page">
+  <view class="waiting-icon">⏳</view>
+  <view class="waiting-title">等待对方完成...</view>
+  <view class="waiting-sub">对方正在答题，完成后你们将同时看到结果</view>
+  <view class="waiting-progress">
+    <view class="dot-anim">
+      <view class="dot"></view><view class="dot"></view><view class="dot"></view>
+    </view>
+  </view>
+  <button class="cancel-btn" bindtap="reset">取消</button>
+</view>
+
+<!-- 状态4：结果页 -->
+<view wx:if="{{status == 'result'}}" class="result-page">
+  <view class="result-header">
+    <view class="result-type">{{resultType}}</view>
+    <view class="result-title">{{resultTitle}}</view>
+  </view>
+
+  <!-- 六维分析 -->
+  <view class="dimensions-card">
+    <view class="dim-title">六维分析</view>
+    <view class="dim-list">
+      <view class="dim-item" wx:for="{{dimensions}}" wx:key="name">
+        <view class="dim-name">{{item.name}}</view>
+        <view class="dim-bar">
+          <view class="dim-fill" style="width: {{item.score}}%"></view>
+        </view>
+        <view class="dim-score">{{item.score}}分</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 建议 -->
+  <view class="suggestions-card">
+    <view class="sug-title">💡 改善建议</view>
+    <view class="sug-list">
+      <view wx:for="{{suggestions}}" wx:key="*this" class="sug-item">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 分享 -->
+  <view class="share-section">
+    <button class="share-btn" open-type="share">分享给朋友</button>
+    <view class="share-text-preview">{{shareText}}</view>
+  </view>
+
+  <!-- Banner广告 -->
+  <view class="banner-ad" wx:if="{{bannerLoaded}}">
+    <ad unit-id="adunit-xxxxxx" type="banner"></ad>
+  </view>
+
+  <view class="replay-btn" bindtap="reset">再测一次</view>
+</view>
+
+</view>
