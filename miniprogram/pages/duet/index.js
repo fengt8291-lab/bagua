@@ -1,42 +1,63 @@
-// Duet 小程序 - 核心逻辑
-// 双人配对测试：配对码机制 + 共识场景题 + 结果对比
+const API = require('../../config/api')
 
 Page({
   data: {
-    // 状态：pair | answering | waiting | result
     status: 'pair',
-    
-    // 配对信息
-    myCode: '',       // 我的配对码 ABC-123
-    partnerCode: '',   // 对方配对码
-    pairId: '',        // 配对会话ID
-    
-    // 题目进度
-    currentQ: 0,      // 当前第几题（0-based）
-    totalQ: 15,        // 总题数
-    answers: [],      // 我的答案数组
-    partnerAnswers: [], // 对方答案（从服务器拉取）
-    
-    // 结果
+
+    myCode: '',
+    partnerCode: '',
+    pairId: '',
+
+    currentQ: 0,
+    totalQ: 15,
+    answers: [],
+    partnerAnswers: [],
+
     resultType: '',
     resultTitle: '',
-    dimensions: [],    // 6维分析
-    suggestions: [],  // 改善建议
+    dimensions: [],
+    suggestions: [],
     shareText: '',
-    
-    // Banner广告
+
     bannerLoaded: false,
+
+    questions: [
+      { text: '周末你更想做什么？', options: ['宅家休息', '外出探索', '朋友聚会', '学习提升'] },
+      { text: '遇到分歧时你通常？', options: ['坚持己见', '寻求妥协', '暂时回避', '换位思考'] },
+      { text: '你更喜欢哪种约会？', options: ['浪漫晚餐', '户外运动', '看电影', '一起做饭'] },
+      { text: '收到消息你会？', options: ['秒回', '想一下再回', '忙完再回', '看心情'] },
+      { text: '你的消费观是？', options: ['及时享乐', '精打细算', '投资自己', '攒钱为主'] },
+      { text: '压力大时你会？', options: ['找人倾诉', '独处消化', '运动释放', '吃东西'] },
+      { text: '你更看重对方什么？', options: ['外貌', '性格', '才华', '经济'] },
+      { text: '旅行时你更在意？', options: ['目的地', '同行的人', '美食', '拍照打卡'] },
+      { text: '吵架后你会？', options: ['主动和好', '等对方和好', '冷战几天', '看谁的错'] },
+      { text: '你理想的相处模式？', options: ['天天黏一起', '各自有空间', '定期约会', '随缘'] },
+      { text: '对方忘记纪念日？', options: ['很生气', '提醒一下', '无所谓', '也忘了'] },
+      { text: '你更相信？', options: ['一见钟情', '日久生情', '缘分天注定', '自己争取'] },
+      { text: '朋友圈你会？', options: ['经常发', '偶尔发', '只看不发', '设置分组'] },
+      { text: '你做决定时？', options: ['凭感觉', '理性分析', '参考他人', '抛硬币'] },
+      { text: '你希望未来？', options: ['稳定安逸', '充满挑战', '自由自在', '事业有成'] }
+    ]
   },
 
   onLoad() {
-    // 检查是否有未完成的配对
     const cache = wx.getStorageSync('duet_cache') || {}
     if (cache.myCode) {
       this.setData({ myCode: cache.myCode, pairId: cache.pairId, status: 'pair' })
     }
   },
 
-  // 生成配对码
+  onUnload() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
+    if (this.timeoutTimer) {
+      clearTimeout(this.timeoutTimer)
+      this.timeoutTimer = null
+    }
+  },
+
   generateCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     const nums = '0123456789'
@@ -50,12 +71,10 @@ Page({
     this.setData({ status: 'pair' })
   },
 
-  // 输入对方配对码
   onPartnerCodeInput(e) {
     this.setData({ partnerCode: e.detail.value.toUpperCase() })
   },
 
-  // 开始配对
   startPairing() {
     const { partnerCode } = this.data
     if (partnerCode.length !== 7 || partnerCode.indexOf('-') !== 3) {
@@ -63,121 +82,126 @@ Page({
       return
     }
     wx.showLoading({ title: '连接中...' })
-    
-    wx.request({
-      url: 'https://soul.nihaofengzi.top/api/duet/pair',
-      method: 'POST',
+
+    wx.cloud.callFunction({
+      name: 'apiProxy',
       data: {
-        myCode: this.data.myCode,
-        partnerCode: partnerCode,
-        pairId: this.data.pairId
+        path: API.ENDPOINTS.DUET_PAIR,
+        data: {
+          myCode: this.data.myCode,
+          partnerCode: partnerCode,
+          pairId: this.data.pairId
+        }
       },
       success: (res) => {
         wx.hideLoading()
-        if (res.data.code === 0) {
-          this.setData({ 
-            pairId: res.data.data.pairId,
+        if (res.result && res.result.code === 0) {
+          this.setData({
+            pairId: res.result.data.data.pairId,
             status: 'answering',
             currentQ: 0,
             answers: []
           })
         } else {
-          wx.showToast({ title: res.data.msg || '配对失败', icon: 'none' })
+          wx.showToast({ title: res.result?.data?.msg || '配对失败', icon: 'none' })
         }
       },
       fail: () => {
         wx.hideLoading()
-        // TODO: 降级到本地题目模式
-        this.setData({ status: 'answering' })
+        wx.showToast({ title: '配对失败，请检查网络', icon: 'none' })
       }
     })
   },
 
-  // 答题 - 选择答案
   selectAnswer(optionIndex) {
     const { currentQ, answers, totalQ } = this.data
     const newAnswers = [...answers]
     newAnswers[currentQ] = optionIndex
-    
+
     this.setData({ answers: newAnswers })
-    
+
     if (currentQ < totalQ - 1) {
-      // 下一题
       setTimeout(() => {
         this.setData({ currentQ: currentQ + 1 })
       }, 300)
     } else {
-      // 最后一题，提交
       this.submitAnswers()
     }
   },
 
-  // 提交答案
   submitAnswers() {
     wx.showLoading({ title: '等待对方...' })
     const { pairId, answers, myCode } = this.data
-    
-    wx.request({
-      url: 'https://soul.nihaofengzi.top/api/duet/submit',
-      method: 'POST',
-      data: { pairId, myCode, answers },
+
+    wx.cloud.callFunction({
+      name: 'apiProxy',
+      data: {
+        path: API.ENDPOINTS.DUET_SUBMIT,
+        data: { pairId, myCode, answers }
+      },
       success: (res) => {
-        if (res.data.code === 0) {
-          // 已提交，等待对方
+        if (res.result && res.result.code === 0) {
           this.setData({ status: 'waiting' })
-          // 轮询检查对方是否完成
           this.waitForPartner()
         } else {
           wx.showToast({ title: '提交失败', icon: 'none' })
+          wx.hideLoading()
         }
       },
       fail: () => {
         wx.hideLoading()
-        // TODO: 离线模式
-        this.setData({ status: 'result', resultType: 'local_test' })
+        wx.showToast({ title: '提交失败，请检查网络', icon: 'none' })
       }
     })
   },
 
-  // 等待对方完成
   waitForPartner() {
     const { pairId, partnerCode } = this.data
-    const checkInterval = setInterval(() => {
-      wx.request({
-        url: 'https://soul.nihaofengzi.top/api/duet/poll',
-        data: { pairId, partnerCode },
+    let pollCount = 0
+    const maxPolls = 15
+
+    this.pollTimer = setInterval(() => {
+      pollCount++
+      wx.cloud.callFunction({
+        name: 'apiProxy',
+        data: {
+          path: API.ENDPOINTS.DUET_POLL,
+          data: { pairId, partnerCode }
+        },
         success: (res) => {
-          if (res.data && res.data.code === 0 && res.data.data.ready) {
-            clearInterval(checkInterval)
-            this.calculateResult(res.data.data)
+          if (res.result && res.result.code === 0 && res.result.data.data.ready) {
+            clearInterval(this.pollTimer)
+            clearTimeout(this.timeoutTimer)
+            this.calculateResult(res.result.data.data)
           }
         },
-        fail: () => clearInterval(checkInterval)
+        fail: () => clearInterval(this.pollTimer)
       })
+
+      if (pollCount >= maxPolls) {
+        clearInterval(this.pollTimer)
+      }
     }, 2000)
-    
-    // 30秒超时
-    setTimeout(() => {
-      clearInterval(checkInterval)
+
+    this.timeoutTimer = setTimeout(() => {
+      clearInterval(this.pollTimer)
       if (this.data.status === 'waiting') {
         wx.showToast({ title: '对方超时，进入本地结果', icon: 'none' })
         this.setData({ status: 'result', resultType: 'local' })
+        wx.hideLoading()
       }
     }, 30000)
   },
 
-  // 计算结果
   calculateResult(data) {
     const { answers, partnerAnswers } = data
-    
-    // 计算共识维度（双方答案相同比例）
+
     let consensusCount = 0
     for (let i = 0; i < answers.length; i++) {
       if (answers[i] === partnerAnswers[i]) consensusCount++
     }
     const consensusRate = consensusCount / answers.length
 
-    // 关系类型判定（简化版）
     const typeNames = ['互补型', '同步型', '探索型', '守护型', '弹性型']
     const typeIndex = Math.floor(consensusRate * typeNames.length) % typeNames.length
     const resultType = typeNames[typeIndex]
@@ -191,7 +215,7 @@ Page({
 
     const dimensions = [
       { name: '沟通方式', mine: '直接', partner: '委婉', score: Math.floor(consensusRate * 100) },
-      { name: '决策模式', mine: '理性', partner: '感性', score: Math.floor((1-consensusRate) * 60 + 40) },
+      { name: '决策模式', mine: '理性', partner: '感性', score: Math.floor((1 - consensusRate) * 60 + 40) },
       { name: '冲突处理', mine: '冷处理', partner: '热解决', score: Math.floor(consensusRate * 70 + 30) },
       { name: '亲密距离', mine: '独立', partner: '依赖', score: Math.floor(consensusRate * 80 + 20) },
     ]
@@ -216,7 +240,6 @@ Page({
     wx.hideLoading()
   },
 
-  // 分享
   onShareAppMessage() {
     return {
       title: this.data.shareText || '测测我们的关系化学反应',
@@ -224,8 +247,15 @@ Page({
     }
   },
 
-  // 重置
   reset() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
+    if (this.timeoutTimer) {
+      clearTimeout(this.timeoutTimer)
+      this.timeoutTimer = null
+    }
     wx.removeStorageSync('duet_cache')
     this.setData({
       status: 'pair',

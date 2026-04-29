@@ -1,8 +1,9 @@
 {
   "pages": [
+    "pages/home/home",
+    "pages/anniversary/anniversary",
     "pages/bagua/index",
-    "pages/index/index",
-    "pages/example/index"
+    "pages/duet/index"
   ],
   "window": {
     "backgroundColor": "#F5F0E8",
@@ -10,6 +11,26 @@
     "navigationBarBackgroundColor": "#F5F0E8",
     "navigationBarTitleText": "六爻起卦",
     "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#c9a96e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/anniversary/anniversary",
+        "text": "纪念日",
+        "iconPath": "images/icons/business.png",
+        "selectedIconPath": "images/icons/business-active.png"
+      }
+    ]
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",

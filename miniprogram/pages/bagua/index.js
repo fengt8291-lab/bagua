@@ -1,4 +1,5 @@
-// 起卦工具 - 主逻辑
+const API = require('../../config/api')
+
 Page({
   data: {
     status: 'intro',
@@ -76,7 +77,6 @@ Page({
     const { tosses } = this.data
     const HEX_NAMES = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤']
 
-    // 计算外卦（初三爻：tosses[5,4,3]）和内卦（二三爻：tosses[2,1,0]）
     const calcGua = (i0, i1, i2) => {
       return (tosses[i0] >= 7 ? 1 : 0) * 4 +
              (tosses[i1] >= 7 ? 1 : 0) * 2 +
@@ -89,7 +89,6 @@ Page({
     const LINE_NAMES = ['初九', '九二', '九三', '六四', '九五', '上六']
     const LINE_TEXTS = { 6: '老阳·变', 7: '少阳', 9: '老阴·动', 8: '少阴' }
 
-    // tosses[3..17] 是6爻，从上往下显示则reverse
     const sixTosses = tosses.slice(3).reverse()
     const displayLines = sixTosses.map((t, i) => ({
       index: i,
@@ -124,36 +123,37 @@ Page({
   },
 
   getAIInterpretation(mainHex, changedHex, lines) {
-    const { question } = this.data
-
-    // 先直接显示结果，API等部署后再启用
-        const { changedCount } = this.data
-    this.setData({
-      aiInterpretation: '【' + mainHex + '】' + (changedHex ? ' → 【' + changedHex + '】' : '') + '\n\n此卦显示，你所问之事目前处于关键节点。变爻' + changedCount + '个，说明局势尚在变化之中，结果尚未完全定型。\n\n建议：当前宜静不宜动，先守成再图进取。保持耐心，局势会在一段时间后自然明朗。\n\n（AI深度解读服务部署中，敬请期待。）',
-      status: 'result'
-    })
-
-    // TODO: API部署后启用以下代码
-    /*
+    const { question, changedCount } = this.data
     wx.showLoading({ title: 'AI解读中...' })
-    wx.request({
-      url: 'https://soul.nihaofengzi.top/api/bagua',
-      method: 'POST',
-      data: { question, mainHex, changedHex: changedHex || '无', lines: lines.map(l => l.name + '：' + l.text) },
+
+    wx.cloud.callFunction({
+      name: 'apiProxy',
+      data: {
+        path: API.ENDPOINTS.BAGUA,
+        data: {
+          question,
+          mainHex,
+          changedHex: changedHex || '无',
+          lines: lines.map(l => l.name + '：' + l.text)
+        }
+      },
       success: (res) => {
         wx.hideLoading()
-        if (res.data && res.data.code === 0) {
-          this.setData({ aiInterpretation: res.data.data.interpretation, status: 'result' })
+        if (res.result && res.result.code === 0) {
+          this.setData({ aiInterpretation: res.result.data.data.interpretation, status: 'result' })
         } else {
-          this.setData({ aiInterpretation: '解读服务暂时不可用，请稍后再试。', status: 'result' })
+          this.setData({ aiInterpretation: this._buildFallbackInterpretation(mainHex, changedHex, changedCount), status: 'result' })
         }
       },
       fail: () => {
         wx.hideLoading()
-        this.setData({ aiInterpretation: '网络连接失败，请检查网络。', status: 'result' })
+        this.setData({ aiInterpretation: this._buildFallbackInterpretation(mainHex, changedHex, changedCount), status: 'result' })
       }
     })
-    */
+  },
+
+  _buildFallbackInterpretation(mainHex, changedHex, changedCount) {
+    return '【' + mainHex + '】' + (changedHex ? ' → 【' + changedHex + '】' : '') + '\n\n此卦显示，你所问之事目前处于关键节点。变爻' + changedCount + '个，说明局势尚在变化之中，结果尚未完全定型。\n\n建议：当前宜静不宜动，先守成再图进取。保持耐心，局势会在一段时间后自然明朗。'
   },
 
   onShareAppMessage() {
@@ -161,8 +161,16 @@ Page({
     return { title: '我起了一卦【' + mainHex + '】，你也来试试', path: '/pages/bagua/index' }
   },
 
+  onUnload() {
+    if (this.tossInterval) {
+      clearInterval(this.tossInterval)
+    }
+  },
+
   reset() {
-    clearInterval(this.tossInterval)
+    if (this.tossInterval) {
+      clearInterval(this.tossInterval)
+    }
     this.setData({
       status: 'intro',
       question: '',

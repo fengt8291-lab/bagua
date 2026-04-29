@@ -1,0 +1,53 @@
+<view class="container">
+  <view class="header">
+    <view class="title">纪念日</view>
+    <view class="subtitle">记录你们的重要时刻</view>
+  </view>
+
+  <view class="list" wx:if="{{anniversaries.length > 0}}">
+    <view class="card {{item.isToday ? 'today' : ''}}" wx:for="{{anniversaries}}" wx:key="_id">
+      <view class="card-content">
+        <view class="card-name">{{item.name}}</view>
+        <view class="card-date">{{item.date}}</view>
+        <view class="card-days {{item.isPast ? 'past' : 'future'}}">
+          <block wx:if="{{item.isToday}}">🎉 今天！</block>
+          <block wx:elif="{{item.isPast}}">已过 {{-item.daysUntil}} 天</block>
+          <block wx:else>还有 {{item.daysUntil}} 天</block>
+        </view>
+      </view>
+      <view class="card-delete" catchtap="deleteAnniversary" data-id="{{item._id}}">删除</view>
+    </view>
+  </view>
+
+  <view class="empty" wx:else>
+    <view class="empty-icon">📅</view>
+    <view class="empty-text">还没有纪念日</view>
+    <view class="empty-hint">点击下方按钮添加</view>
+  </view>
+
+  <view class="add-btn" bindtap="showAdd">
+    <view class="add-icon">+</view>
+  </view>
+
+  <view class="modal" wx:if="{{showAddModal}}" bindtap="hideAdd">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">添加纪念日</view>
+      <view class="modal-form">
+        <view class="form-item">
+          <view class="form-label">名称</view>
+          <input class="form-input" placeholder="例如：第一次相遇" bindinput="onNameInput" value="{{newName}}" />
+        </view>
+        <view class="form-item">
+          <view class="form-label">日期</view>
+          <picker mode="date" bindchange="onDateChange" value="{{newDate}}">
+            <view class="form-input picker">{{newDate || '请选择日期'}}</view>
+          </picker>
+        </view>
+      </view>
+      <view class="modal-btns">
+        <view class="modal-btn cancel" bindtap="hideAdd">取消</view>
+        <view class="modal-btn confirm" bindtap="addAnniversary">确定</view>
+      </view>
+    </view>
+  </view>
+</view>

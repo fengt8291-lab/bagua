@@ -1,0 +1,20 @@
+<view class="container">
+  <view class="header">
+    <view class="title">六爻起卦</view>
+    <view class="subtitle">以AI之眼，窥事物之变</view>
+  </view>
+
+  <view class="cards">
+    <view class="card" bindtap="goToBagua">
+      <view class="card-icon">☰</view>
+      <view class="card-title">六爻起卦</view>
+      <view class="card-desc">掷卦问事 · AI解读卦象</view>
+    </view>
+
+    <view class="card" bindtap="goToDuet">
+      <view class="card-icon">💑</view>
+      <view class="card-title">关系测试</view>
+      <view class="card-desc">双人配对 · 测测你们的化学反应</view>
+    </view>
+  </view>
+</view>

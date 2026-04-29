@@ -1,26 +1,40 @@
-/**app.wxss**/
+page {
+  --color-primary: #c9a96e;
+  --color-primary-light: #fff8e6;
+  --color-bg: #f5f0e8;
+  --color-bg-white: #ffffff;
+  --color-text: #2d2d2d;
+  --color-text-secondary: #666666;
+  --color-text-placeholder: #999999;
+  --color-border: #e8e0d5;
+  --color-danger: #ff4d4f;
+  --radius-sm: 12rpx;
+  --radius-md: 20rpx;
+  --radius-lg: 24rpx;
+  --radius-xl: 40rpx;
+}
+
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-} 
+}
 
 button {
   background: initial;
 }
 
-button:focus{
+button:focus {
   outline: 0;
 }
 
-button::after{
+button::after {
   border: none;
 }
 
-
 page {
-  background: #f6f6f6;
+  background: #f5f0e8;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
