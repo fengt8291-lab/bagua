@@ -1,7 +1,7 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/anniversary/anniversary",
+    "pages/anniversary/index",
     "pages/bagua/index",
     "pages/duet/index"
   ],
@@ -25,7 +25,7 @@
         "selectedIconPath": "images/icons/home-active.png"
       },
       {
-        "pagePath": "pages/anniversary/anniversary",
+        "pagePath": "pages/anniversary/index",
         "text": "纪念日",
         "iconPath": "images/icons/business.png",
         "selectedIconPath": "images/icons/business-active.png"
