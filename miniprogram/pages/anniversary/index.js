@@ -1,49 +1,98 @@
+const API = require('../../config/api')
+
 Page({
   data: {
     anniversaries: [],
     showAddModal: false,
+    showNameModal: false,
+    showDelModal: false,
+    delTargetId: '',
     newName: '',
-    newDate: ''
+    newDate: '',
+    coupleName: '',
+    showAbout: false,
+    editingCoupleName: false,
+    editCoupleName: '',
   },
 
   onLoad() {
     this.loadAnniversaries()
+    this.loadCoupleName()
   },
 
   onShow() {
     this.loadAnniversaries()
   },
 
-  loadAnniversaries() {
-    const db = wx.cloud.database()
-    db.collection('anniversaries')
-      .orderBy('date', 'asc')
-      .get()
-      .then(res => {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+  // =====================================================================
+  // Couple Name
+  // =====================================================================
 
-        const anniversaries = res.data.map(item => {
-          const eventDate = new Date(item.date)
-          eventDate.setHours(0, 0, 0, 0)
-          const diffTime = eventDate.getTime() - today.getTime()
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-          return {
-            ...item,
-            daysUntil: diffDays,
-            isPast: diffDays < 0,
-            isToday: diffDays === 0
-          }
-        })
-
-        this.setData({ anniversaries })
-      })
-      .catch(err => {
-        console.error('加载纪念日失败:', err)
-        wx.showToast({ title: '加载失败', icon: 'none' })
-      })
+  loadCoupleName() {
+    const coupleName = wx.getStorageSync('coupleName') || ''
+    this.setData({ coupleName })
   },
+
+  showNameModal() {
+    this.setData({
+      showNameModal: true,
+      editCoupleName: this.data.coupleName || '',
+    })
+  },
+
+  hideNameModal() {
+    this.setData({ showNameModal: false })
+  },
+
+  onCoupleNameInput(e) {
+    this.setData({ editCoupleName: e.detail.value })
+  },
+
+  saveCoupleName() {
+    const name = this.data.editCoupleName.trim()
+    wx.setStorageSync('coupleName', name)
+    this.setData({ coupleName: name, showNameModal: false })
+    wx.showToast({ title: '已保存', icon: 'success' })
+  },
+
+  // =====================================================================
+  // Anniversary List
+  // =====================================================================
+
+  loadAnniversaries() {
+    const raw = wx.getStorageSync('anniversaries') || '[]'
+    let list = []
+    try { list = JSON.parse(raw) } catch (e) {}
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    list = list.map(item => {
+      const eventDate = new Date(item.date)
+      eventDate.setHours(0, 0, 0, 0)
+      const diffTime = eventDate.getTime() - today.getTime()
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return {
+        ...item,
+        daysUntil: diffDays,
+        isPast: diffDays < 0,
+        isToday: diffDays === 0,
+      }
+    })
+
+    // Sort: today first, then upcoming, then past
+    list.sort((a, b) => {
+      if (a.isToday && !b.isToday) return -1
+      if (!a.isToday && b.isToday) return 1
+      return a.daysUntil - b.daysUntil
+    })
+
+    this.setData({ anniversaries: list })
+  },
+
+  // =====================================================================
+  // Add
+  // =====================================================================
 
   showAdd() {
     this.setData({ showAddModal: true, newName: '', newDate: '' })
@@ -63,7 +112,6 @@ Page({
 
   addAnniversary() {
     const { newName, newDate } = this.data
-
     if (!newName.trim()) {
       wx.showToast({ title: '请输入名称', icon: 'none' })
       return
@@ -73,49 +121,54 @@ Page({
       return
     }
 
-    wx.showLoading({ title: '添加中...' })
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: newName.trim(),
+      date: newDate,
+      createAt: new Date().toISOString().slice(0, 10),
+    }
 
-    const db = wx.cloud.database()
-    db.collection('anniversaries').add({
-      data: {
-        name: newName.trim(),
-        date: newDate,
-        createTime: db.serverDate()
-      }
-    })
-    .then(() => {
-      wx.hideLoading()
-      wx.showToast({ title: '添加成功', icon: 'success' })
-      this.setData({ showAddModal: false })
-      this.loadAnniversaries()
-    })
-    .catch(err => {
-      wx.hideLoading()
-      console.error('添加纪念日失败:', err)
-      wx.showToast({ title: '添加失败', icon: 'none' })
-    })
+    const raw = wx.getStorageSync('anniversaries') || '[]'
+    let list = []
+    try { list = JSON.parse(raw) } catch (e) {}
+    list.push(item)
+    wx.setStorageSync('anniversaries', JSON.stringify(list))
+
+    this.setData({ showAddModal: false })
+    this.loadAnniversaries()
+    wx.showToast({ title: '添加成功', icon: 'success' })
   },
 
-  deleteAnniversary(e) {
-    const { id } = e.currentTarget.dataset
+  // =====================================================================
+  // Delete
+  // =====================================================================
 
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这个纪念日吗？',
-      success: (res) => {
-        if (res.confirm) {
-          const db = wx.cloud.database()
-          db.collection('anniversaries').doc(id).remove()
-            .then(() => {
-              wx.showToast({ title: '删除成功', icon: 'success' })
-              this.loadAnniversaries()
-            })
-            .catch(err => {
-              console.error('删除纪念日失败:', err)
-              wx.showToast({ title: '删除失败', icon: 'none' })
-            })
-        }
-      }
-    })
-  }
+  confirmDelete(e) {
+    const { id } = e.currentTarget.dataset
+    this.setData({ delTargetId: id, showDelModal: true })
+  },
+
+  hideDel() {
+    this.setData({ showDelModal: false, delTargetId: '' })
+  },
+
+  doDelete() {
+    const id = this.data.delTargetId
+    const raw = wx.getStorageSync('anniversaries') || '[]'
+    let list = []
+    try { list = JSON.parse(raw) } catch (e) {}
+    list = list.filter(item => item.id !== id)
+    wx.setStorageSync('anniversaries', JSON.stringify(list))
+    this.setData({ showDelModal: false, delTargetId: '' })
+    this.loadAnniversaries()
+    wx.showToast({ title: '已删除', icon: 'success' })
+  },
+
+  // =====================================================================
+  // About
+  // =====================================================================
+
+  toggleAbout() {
+    this.setData({ showAbout: !this.data.showAbout })
+  },
 })
